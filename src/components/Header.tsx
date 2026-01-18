@@ -158,7 +158,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* --- DESKTOP MEGAMENU OVERLAY --- */}
+      {/* --- DESKTOP MEGAMENU OVERLAY (No changes here) --- */}
       <AnimatePresence>
         {hoveredNav && !isLocked && !isMenuOpen && navItems.find(n => n.href === hoveredNav)?.sections && (
           <div className="fixed top-16 left-0 w-full h-[calc(100vh-64px)] hidden md:block z-40">
@@ -194,33 +194,32 @@ const Header = () => {
         )}
       </AnimatePresence>
 
-      {/* --- MOBILE MENU OVERLAY (SIMPLIFIED) --- */}
+      {/* --- FIXED MOBILE DROPDOWN --- */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 top-16 z-40 bg-background border-t border-border md:hidden overflow-y-auto pb-20"
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed inset-0 top-16 z-40 bg-background md:hidden h-screen overflow-y-auto"
           >
-            <div className="container px-4 py-6 space-y-6">
-              <nav className="flex flex-col">
-                {navItems.map((item) => (
-                  <Link 
-                    key={item.href}
-                    to={item.href} 
-                    onClick={handleLinkClick}
-                    className={`text-xl font-medium py-4 border-b border-border/50 flex justify-between items-center ${isActive(item.href) ? 'text-primary' : 'text-foreground'}`}
-                  >
-                    {t(item.en, item.fr)}
-                    {/* Add a simple arrow to indicate it's clickable */}
-                    <ChevronRight size={16} className="text-muted-foreground/50" />
-                  </Link>
-                ))}
-              </nav>
-
-              <div className="pt-4">
-                <Button variant="hero" className="w-full justify-center h-12 text-lg" asChild onClick={handleLinkClick}>
+            <div className="flex flex-col p-6 space-y-2">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.href}
+                  to={item.href} 
+                  onClick={handleLinkClick}
+                  className={`text-2xl font-semibold py-4 border-b border-border/50 flex justify-between items-center ${
+                    isActive(item.href) ? 'text-primary' : 'text-foreground'
+                  }`}
+                >
+                  {t(item.en, item.fr)}
+                  <ChevronRight size={20} className="text-muted-foreground/30" />
+                </Link>
+              ))}
+              
+              <div className="pt-8">
+                <Button variant="hero" className="w-full py-7 text-xl" asChild onClick={handleLinkClick}>
                   <Link to="/contact">{t('Get Started', 'Commencer')}</Link>
                 </Button>
               </div>
