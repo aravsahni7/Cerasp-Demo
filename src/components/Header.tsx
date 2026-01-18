@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react'; // Added useEffect
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react'; // Added ChevronDown
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
@@ -12,6 +12,9 @@ const Header = () => {
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   
+  // New state for mobile accordion (optional, but good for UX)
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
 
@@ -63,9 +66,20 @@ const Header = () => {
 
   const isActive = (href: string) => location.pathname === href;
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMenuOpen]);
+
   const closeMenu = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setHoveredNav(null);
+    setIsMenuOpen(false); // Ensure mobile menu closes
+    setMobileExpanded(null);
   };
 
   const handleLinkClick = () => {
@@ -75,24 +89,23 @@ const Header = () => {
 
   const handleMouseEnter = (href: string) => {
     if (isLocked) return;
-
-    // IF the sidebar is already open, switch categories instantly
     if (hoveredNav !== null) {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
       setHoveredNav(href);
       return;
     }
-
-    // IF the sidebar is closed, apply the 1-second delay
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredNav(href);
-    }, 600); // Set to 1000ms (1 second)
+    }, 600);
   };
 
   const handleHeaderMouseLeave = () => {
-    closeMenu();
-    setIsLocked(false);
+    // Only close desktop hover menu, not mobile click menu
+    if (!isMenuOpen) {
+      closeMenu();
+      setIsLocked(false);
+    }
   };
 
   return (
@@ -112,6 +125,7 @@ const Header = () => {
             />
           </Link>
 
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6 h-16">
             {navItems.map((item) => (
               <div 
@@ -137,26 +151,28 @@ const Header = () => {
             <Button variant="hero" className="hidden md:inline-flex" asChild onClick={handleLinkClick}>
               <Link to="/contact">{t('Get Started', 'Commencer')}</Link>
             </Button>
-            <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            
+            {/* Mobile Toggle Button */}
+            <button 
+              className="md:hidden p-2 text-foreground hover:bg-muted rounded-md" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* --- DESKTOP MEGAMENU OVERLAY (Existing code) --- */}
       <AnimatePresence>
-        {hoveredNav && !isLocked && navItems.find(n => n.href === hoveredNav)?.sections && (
+        {hoveredNav && !isLocked && !isMenuOpen && navItems.find(n => n.href === hoveredNav)?.sections && (
           <div className="fixed top-16 left-0 w-full h-[calc(100vh-64px)] hidden md:block z-40">
-            <div 
-              className="absolute inset-0 bg-black/5" 
-              onMouseEnter={closeMenu}
-            />
-
+            <div className="absolute inset-0 bg-black/5" onMouseEnter={closeMenu} />
             <motion.div 
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -100, opacity: 0 }}
-              transition={{ type: "tween", duration: 0.2, ease: "easeOut" }}
+              transition={{ type: "tween", duration: 0.2 }}
               className="relative w-1/2 h-full bg-background border-r border-border shadow-2xl p-12 overflow-y-auto"
               onMouseEnter={(e) => e.stopPropagation()}
             >
@@ -182,6 +198,84 @@ const Header = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* --- ADDED: MOBILE MENU OVERLAY --- */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 top-16 z-40 bg-background border-t border-border md:hidden overflow-y-auto pb-20"
+          >
+            <div className="container px-4 py-6 space-y-6">
+              <nav className="flex flex-col space-y-2">
+                {navItems.map((item) => (
+                  <div key={item.href} className="border-b border-border/50 last:border-0">
+                    <div className="flex items-center justify-between py-4">
+                      <Link 
+                        to={item.href} 
+                        onClick={handleLinkClick}
+                        className={`text-lg font-medium ${isActive(item.href) ? 'text-primary' : 'text-foreground'}`}
+                      >
+                        {t(item.en, item.fr)}
+                      </Link>
+                      
+                      {/* Show expand arrow if sections exist */}
+                      {item.sections && (
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setMobileExpanded(mobileExpanded === item.href ? null : item.href);
+                          }}
+                          className="p-2 text-muted-foreground"
+                        >
+                          <ChevronDown 
+                            size={20} 
+                            className={`transition-transform ${mobileExpanded === item.href ? 'rotate-180' : ''}`} 
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Mobile Submenu Accordion */}
+                    <AnimatePresence>
+                      {item.sections && mobileExpanded === item.href && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden bg-muted/30 rounded-lg mb-4"
+                        >
+                          <div className="flex flex-col p-4 space-y-3">
+                            {item.sections.map((section) => (
+                              <Link
+                                key={section.id}
+                                to={`${item.href}#${section.id}`}
+                                onClick={handleLinkClick}
+                                className="text-sm text-muted-foreground hover:text-primary pl-2 border-l-2 border-transparent hover:border-primary transition-colors"
+                              >
+                                {t(section.en, section.fr)}
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </nav>
+
+              <div className="pt-4">
+                <Button variant="hero" className="w-full justify-center" asChild onClick={handleLinkClick}>
+                  <Link to="/contact">{t('Get Started', 'Commencer')}</Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </motion.header>
   );
 };
