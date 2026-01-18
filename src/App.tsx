@@ -20,7 +20,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/Cerasp-Demo">
       <Chatbot />
         <Routes>
           <Route path="/" element={<Index />} />
