@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react'; // Added useEffect
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronRight, ChevronDown } from 'lucide-react'; // Added ChevronDown
+import { Menu, X, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
@@ -12,9 +12,6 @@ const Header = () => {
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   
-  // New state for mobile accordion (optional, but good for UX)
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
 
@@ -78,8 +75,7 @@ const Header = () => {
   const closeMenu = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setHoveredNav(null);
-    setIsMenuOpen(false); // Ensure mobile menu closes
-    setMobileExpanded(null);
+    setIsMenuOpen(false);
   };
 
   const handleLinkClick = () => {
@@ -101,7 +97,6 @@ const Header = () => {
   };
 
   const handleHeaderMouseLeave = () => {
-    // Only close desktop hover menu, not mobile click menu
     if (!isMenuOpen) {
       closeMenu();
       setIsLocked(false);
@@ -163,7 +158,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* --- DESKTOP MEGAMENU OVERLAY (Existing code) --- */}
+      {/* --- DESKTOP MEGAMENU OVERLAY --- */}
       <AnimatePresence>
         {hoveredNav && !isLocked && !isMenuOpen && navItems.find(n => n.href === hoveredNav)?.sections && (
           <div className="fixed top-16 left-0 w-full h-[calc(100vh-64px)] hidden md:block z-40">
@@ -199,7 +194,7 @@ const Header = () => {
         )}
       </AnimatePresence>
 
-      {/* --- ADDED: MOBILE MENU OVERLAY --- */}
+      {/* --- MOBILE MENU OVERLAY (SIMPLIFIED) --- */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
@@ -209,65 +204,23 @@ const Header = () => {
             className="fixed inset-0 top-16 z-40 bg-background border-t border-border md:hidden overflow-y-auto pb-20"
           >
             <div className="container px-4 py-6 space-y-6">
-              <nav className="flex flex-col space-y-2">
+              <nav className="flex flex-col">
                 {navItems.map((item) => (
-                  <div key={item.href} className="border-b border-border/50 last:border-0">
-                    <div className="flex items-center justify-between py-4">
-                      <Link 
-                        to={item.href} 
-                        onClick={handleLinkClick}
-                        className={`text-lg font-medium ${isActive(item.href) ? 'text-primary' : 'text-foreground'}`}
-                      >
-                        {t(item.en, item.fr)}
-                      </Link>
-                      
-                      {/* Show expand arrow if sections exist */}
-                      {item.sections && (
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setMobileExpanded(mobileExpanded === item.href ? null : item.href);
-                          }}
-                          className="p-2 text-muted-foreground"
-                        >
-                          <ChevronDown 
-                            size={20} 
-                            className={`transition-transform ${mobileExpanded === item.href ? 'rotate-180' : ''}`} 
-                          />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Mobile Submenu Accordion */}
-                    <AnimatePresence>
-                      {item.sections && mobileExpanded === item.href && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden bg-muted/30 rounded-lg mb-4"
-                        >
-                          <div className="flex flex-col p-4 space-y-3">
-                            {item.sections.map((section) => (
-                              <Link
-                                key={section.id}
-                                to={`${item.href}#${section.id}`}
-                                onClick={handleLinkClick}
-                                className="text-sm text-muted-foreground hover:text-primary pl-2 border-l-2 border-transparent hover:border-primary transition-colors"
-                              >
-                                {t(section.en, section.fr)}
-                              </Link>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <Link 
+                    key={item.href}
+                    to={item.href} 
+                    onClick={handleLinkClick}
+                    className={`text-xl font-medium py-4 border-b border-border/50 flex justify-between items-center ${isActive(item.href) ? 'text-primary' : 'text-foreground'}`}
+                  >
+                    {t(item.en, item.fr)}
+                    {/* Add a simple arrow to indicate it's clickable */}
+                    <ChevronRight size={16} className="text-muted-foreground/50" />
+                  </Link>
                 ))}
               </nav>
 
               <div className="pt-4">
-                <Button variant="hero" className="w-full justify-center" asChild onClick={handleLinkClick}>
+                <Button variant="hero" className="w-full justify-center h-12 text-lg" asChild onClick={handleLinkClick}>
                   <Link to="/contact">{t('Get Started', 'Commencer')}</Link>
                 </Button>
               </div>
