@@ -13,11 +13,13 @@ const Hero = () => {
     { value: '50+', en: 'Industry Partners', fr: 'Partenaires industriels' },
   ];
 
+  
+
   return (
-    <section className="min-h-screen pt-12 pb-16 flex items-center bg-gradient-to-b from-background via-muted/30 to-background overflow-hidden">
+    <section className="min-h-screen pt-28 lg:pt-12 pb-16 flex items-center bg-gradient-to-b from-background via-muted/30 to-background overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-20 items-center">
-          {/* Left Side - Animated Logo */}
+         {/* Left Side - Animated Logo */}
           <motion.div
             className="order-2 lg:order-1"
             initial={{ opacity: 0, x: -50 }}
@@ -88,3 +90,4 @@ const Hero = () => {
 };
 
 export default Hero;
+
